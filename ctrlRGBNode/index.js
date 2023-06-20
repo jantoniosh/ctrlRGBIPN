@@ -8,9 +8,10 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-const baud = 115200;
+const volt = 5; // 5 -> Arduino UNO | 3.3 -> Raspberry Pi Pico
+const baud = 9600; // 9600 -> Arduino UNO | 115200 -> Raspberry Pi Pico
 
-const port = new SerialPort({ path: 'COM8', baudRate: baud }, function (err) {
+const port = new SerialPort({ path: '/dev/ttyACM0', baudRate: baud }, function (err) {
     if (err) {
         return console.log('Error: ', err.message)
     }
@@ -33,11 +34,10 @@ io.on('connection', (socket) => {
     };
     console.log('a user connected');
     parser.on('data', (data) => {
-        console.log(data);
-        let rgb = JSON.parse(data)[0];
-        colorDato.r = Math.round(scale(rgb.r, 0, 3.3, 0, 255));
-        colorDato.g = Math.round(scale(rgb.g, 0, 3.3, 0, 255));
-        colorDato.b = Math.round(scale(rgb.b, 0, 3.3, 0, 255));
+        let rgb = JSON.parse(data);
+        colorDato.r = Math.round(scale(rgb.r, 0, volt, 0, 255));
+        colorDato.g = Math.round(scale(rgb.g, 0, volt, 0, 255));
+        colorDato.b = Math.round(scale(rgb.b, 0, volt, 0, 255));
         console.log(colorDato);
         socket.emit('color', colorDato);
     })
